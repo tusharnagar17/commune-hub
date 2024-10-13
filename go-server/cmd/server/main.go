@@ -14,10 +14,14 @@ func main(){
 	// Initialize the database
 	database.InitDatabase(cfg)
 
-	// handle routes
-	router := gin.Default()
+	// migrate db
+	database.MigrateDB(database.DB)
 
+	router := gin.Default()
+	
+	// handle routes
 	routes.SetupRoutes(router)
+	// routes.SetupRoutes(router) 
 
 	if err := router.Run(":8080"); err!=nil {
 		log.Fatal("Failed to run the server:", err)

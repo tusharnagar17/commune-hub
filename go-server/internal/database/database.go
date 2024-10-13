@@ -20,3 +20,4 @@ func InitDatabase(cfg config.Config) {
 		log.Fatal("Failed to connect to the database:", err)
 	}
 }
+

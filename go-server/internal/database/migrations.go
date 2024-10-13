@@ -12,5 +12,5 @@ func MigrateDB(db *gorm.DB) {
 		log.Fatal("Failed to migrate the database:", err)
 	}
 
-	log.Panicln("Database migrated successfully!")
+	log.Println("Database migrated successfully!")
 }
