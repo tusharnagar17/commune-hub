@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,30 +10,34 @@ import (
 	"github.com/tusharnagar17/commune-hub/internal/config"
 )
 
-func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
+// Claims defines the structure of JWT claims
+type Claims struct {
+    UserID uint `json:"user_id"`
+    jwt.StandardClaims
+}
+
+func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         authHeader := c.GetHeader("Authorization")
         if authHeader == "" {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-            c.Abort()
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
             return
         }
 
         parts := strings.Split(authHeader, " ")
         if len(parts) != 2 || parts[0] != "Bearer" {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
-            c.Abort()
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
             return
         }
 
         tokenString := parts[1]
-        
+        claims := &Claims{}
 
         token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
             if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, jwt.ErrSignatureInvalid
+                return nil, fmt.Errorf("unexpcted signing method: %v", token.Header["alg"])
             }
-            return []byte(cfg.JWTSecret), nil
+            return []byte(config.LoadConfig().JWTSecret), nil
         })
 
         if err != nil || !token.Valid {
@@ -42,14 +47,8 @@ func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
         }
 
         // Optionally, set user information in context
-        claims, ok := token.Claims.(jwt.MapClaims)
-        if !ok {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-            c.Abort()
-            return
-        }
 
-        c.Set("userID", uint(claims["user_id"].(float64)))
+        c.Set("userID", claims.UserID)
         c.Next()
     }
 }

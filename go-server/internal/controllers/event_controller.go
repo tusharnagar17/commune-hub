@@ -19,8 +19,8 @@ func CreateEvent(c *gin.Context) {
 }
 
 func GetEvents(c *gin.Context) {
-	var events []models.Event
+	// var events []models.Event
 
-	database.DB.Find(&events)
-	c.JSON(http.StatusOK, events)
+	// database.DB.Find(&events)
+	c.JSON(http.StatusOK, gin.H{"dashboard": "Check"})
 }
